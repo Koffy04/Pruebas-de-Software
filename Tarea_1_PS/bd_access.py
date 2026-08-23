@@ -1,36 +1,44 @@
 import csv
 import re
+import os
 
 email_regex = r"(?:[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+(?:\.[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9\x2d]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
 password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
+
 # Verifica si existe el usuario en la tabla
 def login_check(email, passw):
 
-    with open("db/tabla_usuarios.csv", mode="r", encoding="utf-8") as archivo:
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         reader = csv.DictReader(archivo)
         for row in reader:
 
+            db_correo = row.get('correo')
+            db_contrasena = row.get('contraseña')
+            db_nombre = row.get('nombre')
+
             # Verificación si existe correo en BD
-            if row.get('correo') == email:
+            if db_correo == email:
 
                 #Verificación si existe contraseña en BD
-                if row.get('contraseña') == passw:
+                if db_contrasena == passw:
                     print("Usuario encontrado")
-                    print(f"Bienvenido {row['nombre']}")
+                    print(f"Bienvenido {db_nombre}")
                     return True
                 else:
                     print("Contraseña incorrecta")
                     return False
-            else:
-                print("No existe un correo asociado a la cuenta")
-                return False
+
+        print("No existe un correo asociado a la cuenta")
+        return False
 
 # Registra un nuevo usuario en la tabla, si no existe
 def register_check(name, email, passw):
 
     # Verificación si existe correo en BD
-    with open("db/tabla_usuarios.csv", mode="r", encoding="utf-8") as archivo:
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         reader = csv.DictReader(archivo)
         for row in reader:
             if row.get('correo') == email:
@@ -38,7 +46,7 @@ def register_check(name, email, passw):
                 return False
 
     # Registra el usuario
-    with open("db/tabla_usuarios.csv", mode="a", newline="", encoding="utf-8") as archivo:
+    with open(DB_PATH, mode="a", newline="", encoding="utf-8") as archivo:
         fieldnames = ['nombre', 'correo', 'contraseña']
         writer = csv.DictWriter(archivo, fieldnames=fieldnames)
             
@@ -63,7 +71,7 @@ def register():
     check_name = False
     while not check_name:
         nombre = input("Ingresa tu nombre y apellido, siguiendo el Siguiente formato 'Nombre Apellido': ")
-        n_sure = input(f"¿Estás seguro que {nombre} está bien escrito? Y/N: ")
+        n_sure = input(f"¿Estás seguro que '{nombre}' está bien escrito? Y/N: ")
         if n_sure.upper() == "Y":
             check_name = True
 
@@ -77,7 +85,7 @@ def register():
         else:
             print("El correo no es válido")
 
-    # Conraseña
+    # Contraseña
     check_status = False
     check_password = False
     pattern_password = re.compile(password_regex)
