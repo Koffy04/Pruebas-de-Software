@@ -62,8 +62,8 @@ def register():
     # Nombre
     check_name = False
     while not check_name:
-        nombre = input("Ingresa tu nombre y apellido: ")
-        n_sure = input(f"¿Estás seguro que {nombre} es tu nombre? Y/N: ")
+        nombre = input("Ingresa tu nombre y apellido, Siguiendo el Siguiente formato: Nombre Apellido ")
+        n_sure = input(f"¿Estás seguro que {nombre} está bien escrito? Y/N: ")
         if n_sure.upper() == "Y":
             check_name = True
 
@@ -87,7 +87,7 @@ def register():
             if pattern_password.match(contrasena):
                 check_password = True
             else:
-                print("La contraseña no cumple con em mínimo de seguridad")
+                print("La contraseña no cumple con el mínimo de seguridad")
 
         c_contrasena = input("Vuelve a ingresar tu contraseña: ")
         if contrasena == c_contrasena:
