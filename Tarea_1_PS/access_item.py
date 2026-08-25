@@ -1,5 +1,6 @@
 import csv
 import os
+import access_solicitudes
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_equipos.csv")
@@ -7,21 +8,44 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_equipos.csv")
 fieldnames = ['id', 'nombre_equipo', 'descripcion', 'estado']
 convertion = {'ME': 'Mal estado', 'BE': 'Buen estado'}
 
-def mostrar_equipos():
+def mostrar_equipos(cond):
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
-        reader = csv.DictReader(archivo)
-        print("| ID | Nombre del equipo | Descripción del equipo | Estado del equipo |")
-        for row in reader:
 
-            # Información bruta
-            db_id = row.get(fieldnames[0])
-            db_nombre = row.get(fieldnames[1])
-            db_descripcion = row.get(fieldnames[2])
-            db_estado = row.get(fieldnames[3])
+        # Para Encargado
+        if cond == "all":
 
-            # printeo de la información
-            print(f"| {db_id} | {db_nombre} | {db_descripcion} | {convertion[db_estado]} |")
+            reader = csv.DictReader(archivo)
+            print("| ID | Nombre del equipo | Descripción del equipo | Estado del equipo |")
+            for row in reader:
+
+                # Información bruta
+                db_id = row.get(fieldnames[0])
+                db_nombre = row.get(fieldnames[1])
+                db_descripcion = row.get(fieldnames[2])
+                db_estado = row.get(fieldnames[3])
+
+                # printeo de la información
+                print(f"| {db_id} | {db_nombre} | {db_descripcion} | {convertion[db_estado]} |")
+
+        # Para solicitante
+        else:
+
+            reader = csv.DictReader(archivo)
+            print("| ID | Nombre del equipo | Descripción del equipo ")
+            for row in reader:
+
+                db_estado = row.get(fieldnames[3])
+                if db_estado == "BE":
+
+                    db_id = row.get(fieldnames[0])
+                    if not access_solicitudes.have_solicitud_id_equipo(db_id):
+
+                        db_nombre = row.get(fieldnames[1])
+                        db_descripcion = row.get(fieldnames[2])
+
+                        # printeo de la información
+                        print(f"| {db_id} | {db_nombre} | {db_descripcion} |")
         
     return
 
@@ -66,7 +90,7 @@ def mostrar_estado_individual():
                     found = True
 
             if not found:
-                print("\n<ID no encontrado, puebe con otro>")
+                print("\n< ID no encontrado, puebe con otro >")
                 continue
 
         n_sure = input("\n¿Está seguro que quiere modificar este equipo? Y/N")
@@ -75,17 +99,16 @@ def mostrar_estado_individual():
         elif n_sure.upper() == "N":
             continue
         else:
-            print("\n<Valor ingresado inválido. Ingrese de nuevo>\n")
+            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
 
     done = False
     while not done:
 
         estado = input("\nColoque el estado que le pondrá al equipo (ME: Mal estado, BE: Buen estado)")
         if estado != "ME" and estado != "BE":
-            print("\n<Valor ingresado inválido. Ingrese de nuevo>\n")
+            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
         else:
             cambiar_estado(id, estado)
-
 
 def cambiar_estado(id,new_state):
 
@@ -110,7 +133,7 @@ def cambiar_estado(id,new_state):
             writer.writeheader()
             writer.writerows(new_data)
 
-    print("Estado cambiado de forma exitosa")
+    print("\n< Estado cambiado de forma exitosa >\n")
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
         reader = csv.DictReader(archivo)
@@ -128,3 +151,18 @@ def cambiar_estado(id,new_state):
                 found = True
 
     return
+
+def confirmar_tabla_equipos(id):
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+        reader = csv.DictReader(archivo)
+        for row in reader:
+
+            bd_id = row.get(fieldnames[0])
+            bd_estado = row.get(fieldnames[3])
+
+            if bd_id == id and bd_estado == 'BE':
+                return True
+            else:
+                print("\n< Por favor ingrese un ID válido> \n")
+                return False

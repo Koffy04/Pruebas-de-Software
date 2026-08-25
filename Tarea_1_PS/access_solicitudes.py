@@ -1,13 +1,44 @@
 import csv
 import os
+import fecha
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
 
-
 field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud','estado_usuario']
 convert_solicitud = {'C':'cancelado','F':'finalizado','P':'pendiente','A':'aprobado'}
 convert_user = {'H': 'Habilitado', 'I': 'Inhabilitado'}
+
+def have_solicitud_correo(correo):
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+        reader = csv.DictReader(archivo)
+        for row in reader:
+
+            db_correo = row.get(field_solicitud[1])
+            if db_correo == correo: # VER CASO DE FECHA PASADA
+                return True
+    
+    return False
+
+def have_solicitud_id_equipo(id):
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+            reader = csv.DictReader(archivo)
+            for row in reader:
+                db_id_equipo = row.get(field_solicitud[2])
+                if db_id_equipo == id: # VER CASO DE FECHA PASADA
+                    return True
+                
+    return False
+
+def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
+    with open(DB_PATH, mode="r", encoding="utf-8") as escribir:
+        writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
+        writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
+        return True
+     
+
 def resolver_solicitud():
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:

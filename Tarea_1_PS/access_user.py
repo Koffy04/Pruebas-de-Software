@@ -1,6 +1,7 @@
 import csv
 import re
 import os
+import access_solicitudes
 
 email_regex = r"(?:[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+(?:\.[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9\x2d]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
 password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
@@ -10,18 +11,13 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
 
 fieldnames = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
 convertion = {'H': 'Habilitado', 'I': 'Inhabilitado'}
-#######
-DB_PATH_EQ = os.path.join(BASE_DIR, "db", "tabla_equipos.csv")
-field_item = ['id', 'nombre_equipo', 'descripcion', 'estado']
-convert_item = {'ME': 'Mal estado', 'BE': 'Buen estado'}
-#######
-DB_PATH_SO = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
-field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud','estado_usuario']
-convert_solicitud = {'C':'cancelado','F':'finalizado','P':'pendiente','A':'aprobado'}
-#######
-# Verifica si existe el usuario en la tabla
 
+
+correo = ""
+
+# Verifica si existe el usuario en la tabla
 def login_check(email, passw):
+    global correo
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         reader = csv.DictReader(archivo)
@@ -38,6 +34,7 @@ def login_check(email, passw):
                 #Verificación si existe contraseña en BD
                 if db_contrasena == passw:
                     print("Usuario encontrado")
+                    correo = email
                     if db_tipo == "encargado":
                         print(f"Bienvenido Encargado {db_nombre}")
                         return True,True
@@ -68,7 +65,7 @@ def register_check(name, email, passw):
         
         writer = csv.DictWriter(archivo, fieldnames=fieldnames)
         writer.writerow({'nombre': name, 'correo': email, 'contraseña': passw, 'tipo': 'solicitante', 'estado': 'H'})
-        print("\n<¡¡Usuario registrado exitosamente!!>\n")
+        print("\n< ¡¡Usuario registrado exitosamente!! >\n")
         return True
 
 # Inicio de sesión
@@ -102,7 +99,7 @@ def register():
         elif n_sure.upper() == "N":
             continue
         else:
-            print("\n<Valor ingresado inválido. Ingrese de nuevo>\n")
+            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
 
     # Correo
     check_email = False
@@ -112,7 +109,7 @@ def register():
         if pattern_email.match(correo):
             check_email = True
         else:
-            print("\n<El correo no es válido>\n")
+            print("\n< El correo no es válido >\n")
 
     # Contraseña
     check_status = False
@@ -130,46 +127,27 @@ def register():
         if contrasena == c_contrasena:
             check_status = register_check(nombre, correo, contrasena)
         else:
-            print("\n<Contraseñas no coinciden, vuelve a intentarlo\n>")
+            print("\n< Contraseñas no coinciden, vuelve a intentarlo >\n")
             check_password = False
     
     return
 
-def confirmar_tabla_equipos(num_solicitud):
-    with open(DB_PATH_EQ, mode="r", encoding="utf-8") as lectura:
-        for row in lectura:
-            id = row.get(field_item[0])
-            nombre = row.get(field_item[1])
-            desc = row.get(field_item[2])
-            estado = row.get(field_item[3])
-            if id == num_solicitud:
-                if estado == 'BE':
-                    return True
-                else:
-                    print("El equipo no está en un buen estado para ser prestado")
-            else:
-                print("El equipo no existe en la base de datos")
-                return False
+def have_solicitudes():
+    access_solicitudes.have_solicitud_correo(correo)
 
-def estado_usuario(correo_entregado):
-    with open(DB_PATH, mode="r", encoding="utf-8") as lectura:
-        for row in lectura:
-            db_nombre = row.get(fieldnames[0])
+def estado_usuario(correo):
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+        reader = csv.DictReader(archivo)
+        for row in reader:
+            
             db_correo = row.get(fieldnames[1])
-            db_contrasena = row.get(fieldnames[2])
             db_tipo = row.get(fieldnames[3])
-            if  db_correo== correo_entregado:
-                if db_tipo=="H":
-                    return True
-                else:
-                    print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado de turno\n")
-                    return False
-            else:
-                print("El correo entregado no coincide con nuestra base de datos\n")
-                return False
 
-def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
-    with open(DB_PATH_SO, mode="r", encoding="utf-8") as escribir:
-        writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
-        writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
-        return True
+            if db_correo == correo and db_tipo == "H":
+                print("\n< Usuario habilitado para solicitar equipos >\n")
+                return True
+            else:
+                print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
+                return False
