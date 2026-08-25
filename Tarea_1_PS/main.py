@@ -33,7 +33,24 @@ def main():
         print("=========================")
         print(" Interfaz de Solicitante ")
         print("=========================")
-
+        print("------ OPCIONES DE Solicitante ------")
+        while True:
+            print("1. Ver equipos y solicitar equipo")
+            print("2. Ver estado de mi solicitud")
+            print("3. Cancelar solicitud *Solo si tiene una solicitud pendiente")
+            if eleccion == "1":
+                print("----------------------")
+                print(" Lista de los equipos ")
+                print("----------------------\n")
+                access_item.mostrar_equipos()
+                input("\nPresione Enter para continuar...")
+                continue
+            elif eleccion=="2":
+                print("hola")
+            elif eleccion=="3":
+                print("hola")
+            else:
+                print("hola")
     # INTERFAZ DE ENCARGADO
     else:
         while True:
@@ -79,8 +96,8 @@ def main():
                     continue
 
                 return
-            
             elif eleccion == "4":
+                
                 return
 
             else:
