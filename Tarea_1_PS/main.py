@@ -5,6 +5,7 @@ def main():
 
     # INTERFAZ DE INICIO
     encargado = False
+    solicitud=False
     print("Bienvenido a la aplicación de reserva de equipos")
 
     while True:
@@ -39,26 +40,39 @@ def main():
             print("2. Ver estado de mi solicitud")
             print("3. Cancelar solicitud *Solo si tiene una solicitud pendiente")
             if eleccion == "1":
-                print("----------------------")
-                print(" Lista de los equipos ")
-                print("----------------------\n")
-                access_item.mostrar_equipos()
-                print("----------------------\n")
-                print("¿Que equipo desea solicitar? ")
-                print("----------------------\n")
-                numero = input("Ingrese el numero del equipo:")
-                print("----------------------\n")
-                correo = input("Ingrese su correo:")
-                if access_user.confirmar_tabla_equipos(numero) and access_user.estado_usuario(correo):
-                    print("Ingrese la Fecha de inicio de prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
-                    fecha_inicial = input("Formato DD/MM/AAAA:")
-                    print("Ingrese la Fecha del final del prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
-                    fecha_final = input("Formato DD/MM/AAAA:")
-                    print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
-                    
+                if(solicitud==False):
+                    print("----------------------")
+                    print(" Lista de los equipos ")
+                    print("----------------------\n")
+                    access_item.mostrar_equipos()
+                    print("----------------------\n")
+                    print("¿Que equipo desea solicitar? ")
+                    print("----------------------\n")
+                    numero = input("Ingrese el numero del equipo:")
+                    print("----------------------\n")
+                    correo = input("Ingrese su correo:")
+                    if access_user.confirmar_tabla_equipos(numero) and access_user.estado_usuario(correo):
+                        print("Ingrese la Fecha de inicio de prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
+                        fecha_inicial = input("Formato DD/MM/AAAA:")
+                        print("Ingrese la Fecha del final del prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
+                        fecha_final = input("Formato DD/MM/AAAA:")
+                        print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
+                        if access_user.generar_solicitud(numero,correo,fecha_inicial,fecha_final):
+                            print("\n<¡¡Solicitud Generada exitosamente!!>\n")
+                            solicitud=True
+                            continue
+                        else:
+                            print("Algo fallo con la solicitud, intentelo denuevo.")
+                            continue
+                else:
+                    print("Usted ya posee una solicitud en espera, Consulte el estado de su solicitud o cancelela")
                     continue
             elif eleccion=="2":
-                print("hola")
+                print("----------------------")
+                print(" Ingrese su correo para ver su solicitud")
+                print("----------------------\n")
+                correo=input("")
+                access_solicitudes.estado_solicitud(correo)
             elif eleccion=="3":
                 print("hola")
             else:

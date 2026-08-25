@@ -143,7 +143,10 @@ def confirmar_tabla_equipos(num_solicitud):
             desc = row.get(field_item[2])
             estado = row.get(field_item[3])
             if id == num_solicitud:
-                return True
+                if estado == 'BE':
+                    return True
+                else:
+                    print("El equipo no está en un buen estado para ser prestado")
             else:
                 print("El equipo no existe en la base de datos")
                 return False
@@ -169,5 +172,4 @@ def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
     with open(DB_PATH_SO, mode="r", encoding="utf-8") as escribir:
         writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
         writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
-        print("\n<¡¡Solicitud Generada exitosamente!!>\n")
         return True
