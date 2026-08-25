@@ -1,0 +1,5 @@
+id,nombre_equipo,descripcion,estado
+1,PC portátil,Linux/32GB RAM,BE
+2,Pantalla,43x22 pulgadas/OLED,ME
+3,Notebook personal,Máquina Virtual/16GB RAM,ME
+4,Notebook empresarial,Windows/12GB RAM,BE

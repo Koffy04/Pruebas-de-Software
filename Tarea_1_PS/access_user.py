@@ -8,6 +8,9 @@ password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
 
+fieldnames = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
+convertion = {'H': 'Habilitado', 'I': 'Inhabilitado'}
+
 # Verifica si existe el usuario en la tabla
 def login_check(email, passw):
 
@@ -15,9 +18,10 @@ def login_check(email, passw):
         reader = csv.DictReader(archivo)
         for row in reader:
 
-            db_correo = row.get('correo')
-            db_contrasena = row.get('contraseña')
-            db_nombre = row.get('nombre')
+            db_nombre = row.get(fieldnames[0])
+            db_correo = row.get(fieldnames[1])
+            db_contrasena = row.get(fieldnames[2])
+            db_tipo = row.get(fieldnames[3])
 
             # Verificación si existe correo en BD
             if db_correo == email:
@@ -25,14 +29,19 @@ def login_check(email, passw):
                 #Verificación si existe contraseña en BD
                 if db_contrasena == passw:
                     print("Usuario encontrado")
-                    print(f"Bienvenido {db_nombre}")
-                    return True
+                    if db_tipo == "encargado":
+                        print(f"Bienvenido Encargado {db_nombre}")
+                        return True,True
+                    else:
+                        print(f"Bienvenido Solicitante {db_nombre}")
+                        return True,False
+                        
                 else:
                     print("Contraseña incorrecta")
-                    return False
+                    return False,False
 
         print("No existe un correo asociado a la cuenta")
-        return False
+        return False,False
 
 # Registra un nuevo usuario en la tabla, si no existe
 def register_check(name, email, passw):
@@ -46,27 +55,34 @@ def register_check(name, email, passw):
                 return False
 
     # Registra el usuario
-    with open(DB_PATH, mode="a", newline="", encoding="utf-8") as archivo:
-        fieldnames = ['nombre', 'correo', 'contraseña']
+    with open(DB_PATH, mode="a", newline='', encoding="utf-8") as archivo:
+        
         writer = csv.DictWriter(archivo, fieldnames=fieldnames)
-            
-        # Escribimos el nuevo usuario
-        writer.writerow({'nombre': name, 'correo': email, 'contraseña': passw})
-        print("Usuario registrado exitosamente.")
+        writer.writerow({'nombre': name, 'correo': email, 'contraseña': passw, 'tipo': 'solicitante', 'estado': 'H'})
+        print("\n<¡¡Usuario registrado exitosamente!!>\n")
         return True
-       
 
 # Inicio de sesión
 def login():
     check_status = False
     while not check_status:
+
+        # Solicitamos los datos
         correo = input("Ingresa tu correo: ")
         contrasena = input("Ingresa tu contraseña: ")
-        check_status = login_check(correo, contrasena)
-    return
 
-# Reistro de usuario
+        # Con los datos, erificamos la existencia del usuario
+        check_status,encargado = login_check(correo, contrasena)
+
+    # Importante para la diferenciación de la interfaz
+    if encargado:
+        return True
+    else:
+        return False
+
+# Registro de usuario
 def register():
+
     # Nombre
     check_name = False
     while not check_name:
@@ -74,6 +90,10 @@ def register():
         n_sure = input(f"¿Estás seguro que '{nombre}' está bien escrito? Y/N: ")
         if n_sure.upper() == "Y":
             check_name = True
+        elif n_sure.upper() == "N":
+            continue
+        else:
+            print("\n<Valor ingresado inválido. Ingrese de nuevo>\n")
 
     # Correo
     check_email = False
@@ -83,7 +103,7 @@ def register():
         if pattern_email.match(correo):
             check_email = True
         else:
-            print("El correo no es válido")
+            print("\n<El correo no es válido>\n")
 
     # Contraseña
     check_status = False
@@ -101,7 +121,7 @@ def register():
         if contrasena == c_contrasena:
             check_status = register_check(nombre, correo, contrasena)
         else:
-            print("Contraseñas no coinciden, vuelve a intentarlo")
+            print("\n<Contraseñas no coinciden, vuelve a intentarlo\n>")
             check_password = False
     
     return
