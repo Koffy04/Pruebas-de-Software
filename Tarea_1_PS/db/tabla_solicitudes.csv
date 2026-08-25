@@ -1,2 +1,2 @@
-id,correo,id_equipo,fecha_inicial,fecha_final,estado_solicitud,estado_usuario
-1,juan.pereza@uni.com,3,24/08/2026,27/08/2026,P,H
+id,correo,id_equipo,fecha_inicial,fecha_final,estado_solicitud
+1,juan.pereza@uni.com,3,24/08/2026,27/08/2026,P

@@ -10,8 +10,17 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
 
 fieldnames = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
 convertion = {'H': 'Habilitado', 'I': 'Inhabilitado'}
-
+#######
+DB_PATH_EQ = os.path.join(BASE_DIR, "db", "tabla_equipos.csv")
+field_item = ['id', 'nombre_equipo', 'descripcion', 'estado']
+convert_item = {'ME': 'Mal estado', 'BE': 'Buen estado'}
+#######
+DB_PATH_SO = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
+field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud','estado_usuario']
+convert_solicitud = {'C':'cancelado','F':'finalizado','P':'pendiente','A':'aprobado'}
+#######
 # Verifica si existe el usuario en la tabla
+
 def login_check(email, passw):
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
@@ -125,3 +134,40 @@ def register():
             check_password = False
     
     return
+
+def confirmar_tabla_equipos(num_solicitud):
+    with open(DB_PATH_EQ, mode="r", encoding="utf-8") as lectura:
+        for row in lectura:
+            id = row.get(field_item[0])
+            nombre = row.get(field_item[1])
+            desc = row.get(field_item[2])
+            estado = row.get(field_item[3])
+            if id == num_solicitud:
+                return True
+            else:
+                print("El equipo no existe en la base de datos")
+                return False
+
+def estado_usuario(correo_entregado):
+    with open(DB_PATH, mode="r", encoding="utf-8") as lectura:
+        for row in lectura:
+            db_nombre = row.get(fieldnames[0])
+            db_correo = row.get(fieldnames[1])
+            db_contrasena = row.get(fieldnames[2])
+            db_tipo = row.get(fieldnames[3])
+            if  db_correo== correo_entregado:
+                if db_tipo=="H":
+                    return True
+                else:
+                    print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado de turno\n")
+                    return False
+            else:
+                print("El correo entregado no coincide con nuestra base de datos\n")
+                return False
+
+def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
+    with open(DB_PATH_SO, mode="r", encoding="utf-8") as escribir:
+        writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
+        writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
+        print("\n<¡¡Solicitud Generada exitosamente!!>\n")
+        return True

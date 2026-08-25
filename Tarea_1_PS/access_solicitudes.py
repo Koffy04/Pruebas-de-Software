@@ -20,7 +20,6 @@ def resolver_solicitud():
             sl_estadosol = row.get(field_solicitud[5])
             sl_fechai = row.get(field_solicitud[3])
             sl_fechaf = row.get(field_solicitud[4])
-            sl_estadousuario= row.get(field_solicitud[6])
             # printeo de la información
 
     return

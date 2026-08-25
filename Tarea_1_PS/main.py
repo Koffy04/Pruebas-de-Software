@@ -1,6 +1,6 @@
 import access_user
 import access_item
-
+import access_solicitudes
 def main():
 
     # INTERFAZ DE INICIO
@@ -43,8 +43,20 @@ def main():
                 print(" Lista de los equipos ")
                 print("----------------------\n")
                 access_item.mostrar_equipos()
-                input("\nPresione Enter para continuar...")
-                continue
+                print("----------------------\n")
+                print("¿Que equipo desea solicitar? ")
+                print("----------------------\n")
+                numero = input("Ingrese el numero del equipo:")
+                print("----------------------\n")
+                correo = input("Ingrese su correo:")
+                if access_user.confirmar_tabla_equipos(numero) and access_user.estado_usuario(correo):
+                    print("Ingrese la Fecha de inicio de prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
+                    fecha_inicial = input("Formato DD/MM/AAAA:")
+                    print("Ingrese la Fecha del final del prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
+                    fecha_final = input("Formato DD/MM/AAAA:")
+                    print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
+                    
+                    continue
             elif eleccion=="2":
                 print("hola")
             elif eleccion=="3":
