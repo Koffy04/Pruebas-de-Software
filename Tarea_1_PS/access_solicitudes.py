@@ -22,7 +22,6 @@ def have_solicitud_correo(correo):
     return False
 
 def have_solicitud_id_equipo(id):
-
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
             reader = csv.DictReader(archivo)
             for row in reader:
@@ -37,7 +36,6 @@ def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
         writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
         writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
         return True
-     
 
 def resolver_solicitud():
 
@@ -98,7 +96,7 @@ def cancelar_solicitud(correo):
                         print("----------------------\n")
                         resultado=input("")
                         if resultado:
-                            
+                            print("") #ayuda dan falta por hacer este
                     elif sl_estadosol=="A":
                         print("Su solicitud ha sido aprobada, por lo que ya no se puede cancelar, puede ir a retirar el equipo...")
                     else:
