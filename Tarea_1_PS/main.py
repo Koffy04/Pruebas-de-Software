@@ -1,7 +1,7 @@
 import access_user
 import access_item
 import access_solicitudes
-import fecha
+
 
 def main():
 
@@ -66,10 +66,8 @@ def main():
                         if access_item.confirmar_tabla_equipos(id):
 
                             # HACER FUNCIÓN DE VER FECHA
-                            print("Ingrese la Fecha de inicio de prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
-                            fecha_inicial = input("Formato DD/MM/AAAA:")
-                            print("Ingrese la Fecha del final del prestamo *Se asume una fecha correcta, de le contrario será rechazada\n")
-                            fecha_final = input("Formato DD/MM/AAAA:")
+                            fecha_inicial = access_solicitudes.solicitar_fecha_prestamo()
+                            fecha_final = access_solicitudes.solicitar_fecha_fin(fecha_inicial)
                             print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
 
                             if access_solicitudes.generar_solicitud(id,correo,fecha_inicial,fecha_final):

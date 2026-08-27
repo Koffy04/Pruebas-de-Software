@@ -1,6 +1,6 @@
 import csv
 import os
-import fecha
+from datetime import datetime, date, timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
@@ -104,3 +104,58 @@ def cancelar_solicitud(correo):
                 else:
                     print("No se encuentra una solicitud asociada a este correo.")
                     return
+
+def solicitar_fecha_prestamo():
+    hoy = date.today()
+    fecha_minima = hoy + timedelta(days=3)
+
+    while True:
+        entrada = input("Ingrese la fecha de inicio del préstamo (DD/MM/AAAA): ")
+        try:
+            fecha_solicitada = datetime.strptime(entrada, "%d/%m/%Y").date()
+        except ValueError:
+            print("[Error] Formato inválido. Debe usar exactamente DD/MM/AAAA (ej. 15/04/2026).\n")
+            continue
+
+        if fecha_solicitada < hoy:
+            print(f"[Error] No puede solicitar una fecha en el pasado. Hoy es {hoy.strftime('%d/%m/%Y')}.\n")
+            continue
+        if fecha_solicitada < fecha_minima:
+            dias_diferencia = (fecha_solicitada - hoy).days
+            print(
+                f"[Error] Debe solicitar con al menos 3 días de anticipación. "
+                f"La fecha más próxima permitida es {fecha_minima.strftime('%d/%m/%Y')} "
+                f"(intentó solicitar con {dias_diferencia} día(s) de margen).\n"
+            )
+            continue
+        print(f"[Éxito] Fecha aceptada: {fecha_solicitada.strftime('%d/%m/%Y')}")
+        return fecha_solicitada
+
+from datetime import datetime, date, timedelta
+
+def solicitar_fecha_fin(fecha_inicio: date):
+    # Límite máximo: hasta 7 días después de la fecha de inicio
+    fecha_maxima = fecha_inicio + timedelta(days=7)
+
+    while True:
+        entrada = input(f"Ingrese la fecha de fin/devolución (DD/MM/AAAA) [Hasta {fecha_maxima.strftime('%d/%m/%Y')}]: ")
+        try:
+            fecha_fin = datetime.strptime(entrada, "%d/%m/%Y").date()
+        except ValueError:
+            print("[Error] Formato inválido. Debe usar exactamente DD/MM/AAAA.\n")
+            continue
+        if fecha_fin < fecha_inicio:
+            print(f"[Error] La fecha de fin no puede ser anterior al inicio ({fecha_inicio.strftime('%d/%m/%Y')}).\n")
+            continue
+
+        if fecha_fin > fecha_maxima:
+            duracion = (fecha_fin - fecha_inicio).days
+            print(
+                f"[Error] El préstamo no puede superar 1 semana (7 días). "
+                f"Ingresó un período de {duracion} días.\n"
+            )
+            continue
+
+        duracion_dias = (fecha_fin - fecha_inicio).days
+        print(f"[Éxito] Préstamo configurado por {duracion_dias} día(s) (Hasta: {fecha_fin.strftime('%d/%m/%Y')}).")
+        return fecha_fin

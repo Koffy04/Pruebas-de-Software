@@ -133,7 +133,7 @@ def register():
     return
 
 def have_solicitudes():
-    access_solicitudes.have_solicitud_correo(correo)
+    return access_solicitudes.have_solicitud_correo(correo)
 
 def estado_usuario(correo):
 
