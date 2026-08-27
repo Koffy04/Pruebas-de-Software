@@ -1,5 +1,6 @@
 import csv
 import os
+import access_user
 from datetime import datetime, date, timedelta
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,10 +32,15 @@ def have_solicitud_id_equipo(id):
                 
     return False
 
-def generar_solicitud(num_solicitud,correo_entregado,fecha_inicial,fecha_final):
-    with open(DB_PATH, mode="r", encoding="utf-8") as escribir:
+def generar_solicitud(num_solicitud,fecha_inicial,fecha_final):
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+        reader = csv.reader(archivo,delimiter = ",")
+        data = list(reader)
+        row_count = len(data)-1
+    
+    with open(DB_PATH, mode="a", newline='', encoding="utf-8") as escribir:
         writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
-        writer.writerow({'correo': correo_entregado, 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
+        writer.writerow({'id': row_count, 'correo': access_user.get_correo(), 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
         return True
 
 def resolver_solicitud():

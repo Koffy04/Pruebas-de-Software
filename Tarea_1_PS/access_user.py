@@ -12,7 +12,6 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
 fieldnames = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
 convertion = {'H': 'Habilitado', 'I': 'Inhabilitado'}
 
-
 correo = ""
 
 # Verifica si existe el usuario en la tabla
@@ -135,7 +134,7 @@ def register():
 def have_solicitudes():
     return access_solicitudes.have_solicitud_correo(correo)
 
-def estado_usuario(correo):
+def estado_usuario():
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
@@ -143,11 +142,14 @@ def estado_usuario(correo):
         for row in reader:
             
             db_correo = row.get(fieldnames[1])
-            db_tipo = row.get(fieldnames[3])
+            db_estado = row.get(fieldnames[4])
 
-            if db_correo == correo and db_tipo == "H":
+            if db_correo == correo and db_estado == "H":
                 print("\n< Usuario habilitado para solicitar equipos >\n")
                 return True
-            else:
-                print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
-                return False
+            
+        print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
+        return False
+
+def get_correo():
+    return correo

@@ -155,6 +155,7 @@ def cambiar_estado(id,new_state):
 def confirmar_tabla_equipos(id):
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
         reader = csv.DictReader(archivo)
         for row in reader:
 
@@ -163,6 +164,6 @@ def confirmar_tabla_equipos(id):
 
             if bd_id == id and bd_estado == 'BE':
                 return True
-            else:
-                print("\n< Por favor ingrese un ID válido> \n")
-                return False
+            
+        print("\n< Por favor ingrese un ID válido> \n")
+        return False

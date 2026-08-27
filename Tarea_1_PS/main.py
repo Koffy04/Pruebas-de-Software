@@ -50,31 +50,29 @@ def main():
             if eleccion == "1":
                 if access_user.have_solicitudes() == False:
 
-                    print("----------------------")
-                    print(" Lista de los equipos ")
-                    print("----------------------\n")
-
-                    access_item.mostrar_equipos("")
-                    
-                    print("------------------------------")
-                    print(" ¿Que equipo desea solicitar? ")
-                    print("------------------------------\n")
-
                     if access_user.estado_usuario():
 
-                        id = input("Ingrese el ID del equipo:")
+                        print("----------------------")
+                        print(" Lista de los equipos ")
+                        print("----------------------\n")
+
+                        access_item.mostrar_equipos("")
+                        
+                        print("------------------------------")
+                        print(" ¿Que equipo desea solicitar? ")
+                        print("------------------------------\n")
+
+                        id = input("Ingrese el ID del equipo: ")
                         if access_item.confirmar_tabla_equipos(id):
 
                             # HACER FUNCIÓN DE VER FECHA
                             fecha_inicial = access_solicitudes.solicitar_fecha_prestamo()
                             fecha_final = access_solicitudes.solicitar_fecha_fin(fecha_inicial)
+                            print("------------------------------\n")
                             print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
-
-                            if access_solicitudes.generar_solicitud(id,correo,fecha_inicial,fecha_final):
-
+                            if access_solicitudes.generar_solicitud(id,fecha_inicial,fecha_final):
                                 print("\n<¡¡Solicitud Generada exitosamente!!>\n")
                                 continue
-
                             else:
 
                                 print("Algo fallo con la solicitud, intentelo denuevo.")
