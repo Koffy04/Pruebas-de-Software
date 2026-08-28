@@ -36,7 +36,7 @@ def generar_solicitud(num_solicitud,fecha_inicial,fecha_final):
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         reader = csv.reader(archivo,delimiter = ",")
         data = list(reader)
-        row_count = len(data)-1
+        row_count = len(data)
     
     with open(DB_PATH, mode="a", newline='', encoding="utf-8") as escribir:
         writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
