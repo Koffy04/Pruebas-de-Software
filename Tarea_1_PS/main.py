@@ -2,6 +2,7 @@ import access_user
 import access_item
 import access_solicitudes
 
+TARIFA_MORA_DIARIA = 2000 
 
 def main():
 
@@ -44,7 +45,8 @@ def main():
             print("1. Ver y solicitar equipo")
             print("2. Ver estado de mi solicitud")
             print("3. Cancelar solicitud *Solo si tiene una solicitud pendiente")
-            print("4. Salir")
+            print("4. Conoce tu deuda *Solo si tiene una solicitud")
+            print("5. Salir")
             eleccion = input("Su respuesta: ")
 
             if eleccion == "1":
@@ -91,9 +93,20 @@ def main():
                 access_solicitudes.estado_solicitud(correo)
 
             elif eleccion=="3":
-                print("hola")
+                print("-----------------------------------------")
+                print(" Ingrese su correo para ver su solicitud ")
+                print("-----------------------------------------\n")
+                correo=input("")
+                access_solicitudes.cancelar_solicitud(correo)
 
             elif eleccion == "4":
+                print("-----------------------------------------")
+                print(" Ingrese su correo para ver su solicitud ")
+                print("-----------------------------------------\n")
+                correo=input("")
+                access_solicitudes.cancelar_solicitud(correo)
+
+            elif eleccion == "5":
                 return
 
             else:
