@@ -44,21 +44,79 @@ def generar_solicitud(num_solicitud,fecha_inicial,fecha_final):
         writer.writerow({'id': row_count, 'correo': access_user.get_correo(), 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
         return True
 
-def resolver_solicitud():
+def resolver_solicitud(correo):
+    if not os.path.exists(DB_PATH):
+        print(f"\n[Error] No se encontró el archivo: {DB_PATH}")
+        return
 
+    filas = []
+    solicitud_encontrada = False
+    datos_actualizados = None
+
+    # 1. Leer todas las solicitudes y buscar por correo
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         reader = csv.DictReader(archivo)
-        print("| ID | Nombre del equipo | Estado del equipo |")
-        # "ID | correo | id_equipo | fecha_inicial | fecha_final | estado_solicitud | estado_usuario"
+        fieldnames = reader.fieldnames
+        
         for row in reader:
-            sl_correo = row.get(field_solicitud[1])
-            sl_idsol = row.get(field_solicitud[2])
-            sl_estadosol = row.get(field_solicitud[5])
-            sl_fechai = row.get(field_solicitud[3])
-            sl_fechaf = row.get(field_solicitud[4])
-            # printeo de la información
+            sl_correo = row.get(field_solicitud[1], "").strip()
+            
+            if sl_correo == correo.strip():
+                solicitud_encontrada = True
+                
+                # Extraer datos actuales
+                sl_id = row.get(field_solicitud[0])
+                sl_idequipo = row.get(field_solicitud[2])
+                sl_fechai = row.get(field_solicitud[3])
+                sl_fechaf = row.get(field_solicitud[4])
+                sl_estadosol = row.get(field_solicitud[5], "").strip().upper()
+                
+                # Mostrar el detalle de la solicitud encontrada
+                print("\n" + "=" * 80)
+                print(f"| {'ID':<4} | {'Correo':<20} | {'ID Eq':<6} | {'Fecha Inicio':<12} | {'Fecha Fin':<12} | {'Estado':<12} |")
+                print("=" * 80)
+                print(f"| {sl_id:<4} | {sl_correo:<20} | {sl_idequipo:<6} | {sl_fechai:<12} | {sl_fechaf:<12} | {convert_solicitud.get(sl_estadosol, sl_estadosol):<12} |")
+                print("=" * 80)
 
-    return
+                # Menú de opciones de estados
+                print("\nSeleccione el nuevo estado para esta solicitud:")
+                print(" [A] Aprobado")
+                print(" [P] Pendiente")
+                print(" [F] Finalizado")
+                print(" [C] Cancelado")
+                print(" [D] Deuda")
+                print(" [0] Cancelar operación sin cambios")
+                
+                while True:
+                    opcion = input("\nIngrese opción (A/P/F/C/D/0): ").strip().upper()
+                    
+                    if opcion == "0":
+                        print("\nOperación cancelada. No se aplicaron cambios.")
+                        return
+                    elif opcion in convert_solicitud:
+                        row[field_solicitud[5]] = opcion  # Actualiza la columna 'estado_solicitud'
+                        datos_actualizados = row
+                        break
+                    else:
+                        print("[Error] Opción no válida. Ingrese una de las letras indicadas.")
+
+            filas.append(row)
+
+    if not solicitud_encontrada:
+        print(f"\n[Error] No se encontró ninguna solicitud asociada al correo: {correo}")
+        return
+
+    # 2. Guardar los cambios en el archivo CSV
+    if datos_actualizados:
+        with open(DB_PATH, mode="w", newline="", encoding="utf-8") as archivo:
+            writer = csv.DictWriter(archivo, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(filas)
+
+        # 3. Confirmación final
+        nuevo_est = datos_actualizados[field_solicitud[5]]
+        print("\n< Estado de la solicitud actualizado de forma exitosa >")
+        print(f"Nuevo estado registrado: {nuevo_est} ({convert_solicitud[nuevo_est]})\n")
 
 def estado_solicitud(correo):
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
@@ -181,7 +239,7 @@ def solicitar_fecha_fin(fecha_inicio: date):
         print(f"[Éxito] Préstamo configurado por {duracion_dias} día(s) (Hasta: {fecha_fin.strftime('%d/%m/%Y')}).")
         return fecha_fin
 #Esto es pa probar .3.
-def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tarifa_por_dia: int = TARIFA_MORA_DIARIA) -> dict:
+def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tarifa_por_dia) -> dict:
     if fecha_entrega_real <= fecha_fin_pactada:
         return {
             "dias_atraso": 0,
@@ -198,7 +256,7 @@ def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tar
     }
 
 # 2. Función de consulta en CSV
-def calcular_deuda_demora_usuario(correo_usuario: str, tarifa_diaria: int = TARIFA_MORA_DIARIA) -> dict:
+def calcular_deuda_demora_usuario(correo_usuario, tarifa_diaria) -> dict:
     hoy = date.today()
     deuda_total = 0
     dias_totales_atraso = 0
@@ -219,16 +277,12 @@ def calcular_deuda_demora_usuario(correo_usuario: str, tarifa_diaria: int = TARI
         for fila in lector_csv:
             correo = fila["correo"].strip()
             estado = fila["estado_solicitud"].strip().upper()
-
-            # Solo evaluamos las solicitudes activas / con posible mora
-            # Ajusta las letras a tus estados (e.g., 'D' o 'P')
             if correo == correo_usuario and estado == "D":
                 try:
                     fecha_limite = datetime.strptime(fila["fecha_final"].strip(), "%Y-%m-%d").date()
                 except ValueError:
                     continue  
 
-                # Reutilizamos la función de cálculo matemático
                 calculo = calcular_deuda_demora(fecha_limite, hoy, tarifa_diaria)
                 
                 if calculo["dias_atraso"] > 0:
@@ -250,3 +304,28 @@ def calcular_deuda_demora_usuario(correo_usuario: str, tarifa_diaria: int = TARI
         "dias_atraso": dias_totales_atraso,
         "detalles": solicitudes_con_atraso
     }
+
+def mostrar_solicitudes(cond):
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+        # Para Encargado
+        if cond == "all":
+
+            reader = csv.DictReader(archivo)
+            print("| ID | Correo | Numero del equipo | Fecha inicial | Fecha final | Estado de la solicitud | Estado del usuario|")
+            for row in reader:
+
+                # Información bruta
+                db_id = row.get(field_solicitud[0])
+                db_correo = row.get(field_solicitud[0])
+                db_num_eq = row.get(field_solicitud[0])
+                db_fecha_in = row.get(field_solicitud[0])
+                db_fecha_fin = row.get(field_solicitud[0])
+                db_est_sol = row.get(field_solicitud[0])
+                db_est_user = row.get(field_solicitud[0])
+
+                # printeo de la información
+                print(f"| {db_id} | {db_correo} | {db_num_eq} | {db_fecha_in} | {db_fecha_fin} | {convert_solicitud[db_est_sol]} | {convert_user[db_est_user]} |")
+
+    return

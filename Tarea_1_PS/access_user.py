@@ -153,3 +153,62 @@ def estado_usuario():
 
 def get_correo():
     return correo
+
+
+def cambiar_estado_usuario(correo: str, nuevo_estado: str = None):
+    if not os.path.exists(DB_PATH):
+        print(f"\n[Error] No se encontró el archivo: {DB_PATH}")
+        return
+
+    nuevo_estado = nuevo_estado.upper() if nuevo_estado else None
+    if nuevo_estado and nuevo_estado not in convertion:
+        print("\n[Error] Estado inválido. Solo se permite 'H' o 'I'.")
+        return
+
+    filas = []
+    usuario_encontrado = False
+    datos_usuario = None
+
+    # 1. Leer el archivo y actualizar el estado en memoria
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+        reader = csv.DictReader(archivo)
+        for row in reader:
+            db_correo = row.get("correo", "").strip()
+
+            if db_correo == correo.strip():
+                usuario_encontrado = True
+                estado_actual = row.get("estado", "").strip().upper()
+
+                # Si no se pasó nuevo_estado, se invierte: H -> I / I -> H
+                if not nuevo_estado:
+                    estado_destino = "I" if estado_actual == "H" else "H"
+                else:
+                    estado_destino = nuevo_estado
+
+                row["estado"] = estado_destino
+                datos_usuario = row
+
+            filas.append(row)
+
+    if not usuario_encontrado:
+        print(f"\n[Error] No se encontró ningún usuario con el correo: {correo}")
+        return
+
+    # 2. Guardar los cambios en el CSV
+    with open(DB_PATH, mode="w", newline='', encoding="utf-8") as archivo:
+        writer = csv.DictWriter(archivo, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(filas)
+
+    # 3. Mostrar confirmación en pantalla
+    print("\n< Estado de usuario actualizado de forma exitosa >")
+    print("-" * 65)
+    print(f"| {'Nombre':<18} | {'Correo':<22} | {'Rol':<12} | {'Estado':<12} |")
+    print("-" * 65)
+    print(
+        f"| {datos_usuario['nombre']:<18} "
+        f"| {datos_usuario['correo']:<22} "
+        f"| {datos_usuario['tipo']:<12} "
+        f"| {convertion.get(datos_usuario['estado'], datos_usuario['estado']):<12} |"
+    )
+    print("-" * 65 + "\n")

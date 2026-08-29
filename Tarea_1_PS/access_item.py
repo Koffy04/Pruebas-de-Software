@@ -111,15 +111,11 @@ def mostrar_estado_individual():
             cambiar_estado(id, estado)
 
 def cambiar_estado(id,new_state):
-
-    # Copiar toda la información de la tabla
     new_data = []
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         
         reader = csv.DictReader(archivo)
         for row in reader:
-
-            # Cambiar el valor de la fila especificada
             db_id = row.get(fieldnames[0])
             if db_id == id:
                 row[fieldnames[0]] = new_state

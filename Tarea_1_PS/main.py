@@ -123,12 +123,17 @@ def main():
             print("1. Ver solicitudes pendientes")
             print("2. Ver todas las máquinas")
             print("3. Editar el estado de una máquina")
-            print("4. Salir")
+            print("4. Cambiar el estado de una solicitud")
+            print("5. Cambiar el estado de un usuario")
+            print("6. Salir")
             eleccion = input()
 
             if eleccion == "1":
-                # INTERFAZ SOLICITUDES PENDIENTES
-                return
+                print("----------------------")
+                print(" Lista de solicitudes")
+                print("----------------------\n")
+                access_solicitudes.mostrar_solicitudes("all")
+                continue
             elif eleccion == "2":
 
                 print("----------------------")
@@ -159,6 +164,27 @@ def main():
                 return
             
             elif eleccion == "4":
+                print("----------------------")
+                print(" Cambiar una solicitud ")
+                print("----------------------\n")
+                print(" Ingrese correo para identificar la solicitud a cambiar")
+                print("-----------------------------------------\n")
+                correo=input("")
+                access_solicitudes.resolver_solicitud(correo)
+                return
+            elif eleccion == "5":
+                print("----------------------")
+                print(" Cambiar estado de usuario")
+                print("----------------------\n")
+                print(" Ingrese correo para identificar la usuario a cambiar")
+                print("-----------------------------------------\n")
+                correo=input("")
+                print(" Ingrese nuevo estado de usuario")
+                print("-----------------------------------------\n")
+                nuevo_estado=input("")
+                access_user.cambiar_estado_usuario(correo, nuevo_estado)
+                return
+            elif eleccion == "6":
                 return
 
             else:
