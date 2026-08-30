@@ -1,48 +1,166 @@
 import csv
 import os
 import access_user
-from datetime import datetime, date, timedelta
+import access_item
+import fecha
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
+
 TARIFA_MORA_DIARIA = 2000 
-field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud','estado_usuario']
+
+field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud']
 convert_solicitud = {'C':'cancelado','F':'finalizado','P':'pendiente','A':'aprobado', 'D':'deuda'}
+
+field_user = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
 convert_user = {'H': 'Habilitado', 'I': 'Inhabilitado'}
 
-def have_solicitud_correo(correo):
+# verifica si el correo tiene asociado una solicitud activa
+def have_solicitud_correo():
 
+    correo = access_user.get_correo()
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
         reader = csv.DictReader(archivo)
         for row in reader:
 
             db_correo = row.get(field_solicitud[1])
-            db_estado =row.get(field_solicitud[5])
+            db_estado = row.get(field_solicitud[5])
+
             if db_correo == correo and (db_estado == 'A' or db_estado == 'P' or db_estado=='D'): 
                 return True
-            else:
-                return False
+        else:
+            print("Usted ya posee una solicitud en espera, Cumpla con la solicitud o cancelela")
+            return False
 
+# Verifica si el ID del equipo tiene una solicitud activa
 def have_solicitud_id_equipo(id):
+
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+            
             reader = csv.DictReader(archivo)
             for row in reader:
+                
                 db_id_equipo = row.get(field_solicitud[2])
-                if db_id_equipo == id: # VER CASO DE FECHA PASADA
+                if db_id_equipo == id:
                     return True
                 
     return False
 
-def generar_solicitud(num_solicitud,fecha_inicial,fecha_final):
+# Solicita la fecha de inicio de la solicitud
+def solicitar_fecha_inicial():
+
+    print(f"Hoy es {fecha.get_actual()}, La fecha mínima de solicitud es {fecha.plus_bussiness_3days()}")
+
+    while True:
+
+        date = input("Ingrese la fecha de inicio del préstamo (DD/MM/AAAA): ")
+        if fecha.compare_date_past(date):
+            print("Fecha inicial registarda exitosamente\n")
+            break
+
+        else:
+            print("Intentelo de nuevo\n")
+
+    return date
+
+# Solicita la fecha de término de la solicitud
+def solicitar_fecha_final(date):
+    print(f"Tienes 1 semana (7 días) para devolver")
+
+    while True:
+
+        fecha.show_week(date)
+
+        f_date = input("Ingrese la fecha de devolución (DD/MM/AAAA): ")
+        if fecha.compare_date_future(f_date):
+            print("Fecha final registarda exitosamente\n")
+            break
+
+        else:
+            print("Intentelo de nuevo\n")
+
+# Ingresa la solicitud al sistemas
+def solicitar_equipo():
+
+    # Solicitar ID de equipo
+    print("\n¿Qué equipo desea solicitar? Ingrese el ID correspondiente\n")
+    id = input("Su respuesta: ")
+
+    while True:
+
+        # Checkear ID de equipo válido
+        if access_item.confirmar_equipo(id) and have_solicitud_id_equipo(id):
+            break
+            
+        print("\n< Por favor ingrese un ID válido> \n")
+        print("\n¿Qué equipo desea solicitar? Ingrese el ID correspondiente\n")
+        id = input("Su respuesta: ")
+
+    # Solicitar fecha del préstamo
+    DONE = False
+    while not DONE:
+
+        fecha_inicial = solicitar_fecha_inicial()
+        fecha_final = solicitar_fecha_final(fecha_inicial)
+
+        n_sure = input(f"\n¿Está seguro que quiere escoger este rango de fechas (desde {fecha_inicial} hasta {fecha_final})? Y/N")
+        if n_sure.upper() == "Y": DONE = True
+        elif n_sure.upper() == "N": continue
+        else: print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+
+    print("Fechas del préstamo asignados correctamente, generando solicitud...\n")
+
+    # Generar la solicitud
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
         reader = csv.reader(archivo,delimiter = ",")
         data = list(reader)
         row_count = len(data)
     
     with open(DB_PATH, mode="a", newline='', encoding="utf-8") as escribir:
+
         writer = csv.DictWriter(escribir, fieldnames=field_solicitud)
-        writer.writerow({'id': row_count, 'correo': access_user.get_correo(), 'id_equipo': num_solicitud, 'fecha_inicial': fecha_inicial, 'fecha_final': fecha_final, 'estado_solicitud':'P'})
+        writer.writerow({'id': row_count,
+                          'correo': access_user.get_correo(),
+                          'id_equipo': id,
+                          'fecha_inicial': fecha_inicial,
+                          'fecha_final': fecha_final,
+                          'estado_solicitud':'P'
+                          })
+        print("Solicitud válida, generando Solicitud para su próxima aprobación/rechazo")
         return True
+
+    print("Algo fallo con la solicitud, intentelo denuevo.")
+    return False
+
+# Ve todas las solicitudes y sus estados
+def estado_solicitud():
+
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+        count = 0
+        print("| N° de solicitúd | ID del equipo | Fecha de inicio | Fecha de término | Estado |")
+
+        reader = csv.DictReader(archivo)
+        for row in reader:
+
+            # Datos brutos
+            db_correo = row.get(field_solicitud[1])
+            db_iditem = row.get(field_solicitud[2])
+            db_fechai = row.get(field_solicitud[3])
+            db_fechaf = row.get(field_solicitud[4])
+            db_estado = row.get(field_solicitud[5])
+
+            if db_correo == access_user.get_correo():
+                count += 1
+                print(f"| {count} | {db_iditem} | {db_fechai} | {db_fechaf} | {convert_solicitud[db_estado]}")
+
+        if count == 0:
+            print("No se encuentra ninguna solicitud asocioda a este correo.")
+            return
+
+
 
 def resolver_solicitud(correo):
     if not os.path.exists(DB_PATH):
@@ -118,126 +236,65 @@ def resolver_solicitud(correo):
         print("\n< Estado de la solicitud actualizado de forma exitosa >")
         print(f"Nuevo estado registrado: {nuevo_est} ({convert_solicitud[nuevo_est]})\n")
 
-def estado_solicitud(correo):
-    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
-            reader = csv.DictReader(archivo)
-            # "ID | correo | id_equipo | fecha_inicial | fecha_final | estado_solicitud | estado_usuario"
-            for row in reader:
-                sl_correo = row.get(field_solicitud[1])
-                sl_idsol = row.get(field_solicitud[2])
-                sl_estadosol = row.get(field_solicitud[5])
-                sl_fechai = row.get(field_solicitud[3])
-                sl_fechaf = row.get(field_solicitud[4])
-                # printeo de la información
-            if sl_correo==correo:
-                if sl_estadosol=="P":
-                    print("El estado de su solicitud es pendiente...")
-                elif sl_estadosol=="A":
-                    print("Su solicitud ha sido aprobada, puede ir a retirar el equipo...")
-                elif sl_estadosol=="F":
-                    print("Su solicitud ya no se encuentra vigente, realize otra solicitud...")
-                else:
-                    print("Su solicitud se encuentra cancelada, consulte al encargado de turno para más información...")
-            else:
-                print("No se encuentra una solicitud asociada a este correo.")
-                return
+# Cancela una solicitud actual
+def cancelar_solicitud():
 
-def cancelar_solicitud(correo):
-    filas = []
-    encontrada = False
-    modificada = False
+    new_data = []
+    found = False
+    vreified = False
 
-    # 1. Leer todas las filas del CSV
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
-        reader = csv.DictReader(archivo)
-        fieldnames = reader.fieldnames
+
+        reader = csv.DictReader(archivo, fieldnames=field_solicitud)
         for row in reader:
-            sl_correo = row.get("correo")
-            sl_estadosol = row.get("estado_solicitud")
 
-            if sl_correo == correo:
-                encontrada = True
-                if sl_estadosol == "P":
-                    print("El estado de su solicitud es pendiente...")
-                    print("----------------------\n")
-                    print("¿Desea cancelarla? S=1; N=0")
-                    print("----------------------\n")
-                    resultado = input("Seleccione una opción: ").strip()
+            db_correo = row.get(field_solicitud[1])
+            db_fechaf = row.get(field_solicitud[4])
+            db_estado = row.get(field_solicitud[5])
 
-                    if resultado == "1":
-                        row["estado_solicitud"] = "C"
-                        modificada = True
-                        print("\n[Éxito] Solicitud cancelada correctamente.")
-                    else:
-                        print("\nOperación abortada. La solicitud sigue pendiente.")
-                elif sl_estadosol == "A":
-                    print("\nSu solicitud ha sido aprobada, por lo que ya no se puede cancelar, puede ir a retirar el equipo...")
-                elif sl_estadosol == "C":
-                    print("\nSu solicitud ya se encuentra cancelada.")
-                else:
-                    print("\nSu solicitud se encuentra fuera de plazo o inactiva, consulte al encargado de turno.")
+            if db_correo == access_user.get_correo():
+                if fecha.commpare_simple(db_fechaf):
+                    found = True
+                    if db_estado == "P":
+                        while True:
+                            n_sure = input("Su solicitud está a la espera de ser aprobada ¿Está seguro que quiere cancelarla? Y/N")
+                            if n_sure.upper() == "Y":
 
-            filas.append(row)
-    if not encontrada:
-        print("\nNo se encuentra una solicitud asociada a este correo.")
+                                passw = input("Ingrese su contraseña para confirmar: ")
+                                if access_user.verificar_contrasena(passw):
+
+                                    verified = True
+                                    row[field_solicitud[5]] = "C"
+                                    break
+
+                                else:
+                                    print("Contraseña incorrecta intentando de nuevo")
+
+                            elif n_sure.upper() == "N":
+
+                                print("Saliendo de la operación...")
+                                return
+
+                            else:
+                                print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+                    elif db_estado == "A": print("Su solicitud se encunetra aprobada, por lo que no se puede cancelar")
+                    elif db_estado == "C": print("Su solicitud ya se encuentra cancelada")
+
+            new_data.append(row)
+
+    if not found:
+
+        print("\nNo se encuentra una solicitud actual asociada a este correo.")
         return
-    if modificada:
+    
+    if verified:
         with open(DB_PATH, mode="w", encoding="utf-8", newline="") as archivo:
-            writer = csv.DictWriter(archivo, fieldnames=fieldnames)
+            writer = csv.DictWriter(archivo, fieldnames=field_solicitud)
             writer.writeheader()
-            writer.writerows(filas)
+            writer.writerows(new_data)
 
-def solicitar_fecha_prestamo():
-    hoy = date.today()
-    fecha_minima = hoy + timedelta(days=3)
 
-    while True:
-        entrada = input("Ingrese la fecha de inicio del préstamo (DD/MM/AAAA): ")
-        try:
-            fecha_solicitada = datetime.strptime(entrada, "%d/%m/%Y").date()
-        except ValueError:
-            print("[Error] Formato inválido. Debe usar exactamente DD/MM/AAAA (ej. 15/04/2026).\n")
-            continue
 
-        if fecha_solicitada < hoy:
-            print(f"[Error] No puede solicitar una fecha en el pasado. Hoy es {hoy.strftime('%d/%m/%Y')}.\n")
-            continue
-        if fecha_solicitada < fecha_minima:
-            dias_diferencia = (fecha_solicitada - hoy).days
-            print(
-                f"[Error] Debe solicitar con al menos 3 días de anticipación. "
-                f"La fecha más próxima permitida es {fecha_minima.strftime('%d/%m/%Y')} "
-                f"(intentó solicitar con {dias_diferencia} día(s) de margen).\n"
-            )
-            continue
-        print(f"[Éxito] Fecha aceptada: {fecha_solicitada.strftime('%d/%m/%Y')}")
-        return fecha_solicitada
-
-def solicitar_fecha_fin(fecha_inicio: date):
-    fecha_maxima = fecha_inicio + timedelta(days=7)
-
-    while True:
-        entrada = input(f"Ingrese la fecha de fin/devolución (DD/MM/AAAA) [Hasta {fecha_maxima.strftime('%d/%m/%Y')}]: ")
-        try:
-            fecha_fin = datetime.strptime(entrada, "%d/%m/%Y").date()
-        except ValueError:
-            print("[Error] Formato inválido. Debe usar exactamente DD/MM/AAAA.\n")
-            continue
-        if fecha_fin < fecha_inicio:
-            print(f"[Error] La fecha de fin no puede ser anterior al inicio ({fecha_inicio.strftime('%d/%m/%Y')}).\n")
-            continue
-
-        if fecha_fin > fecha_maxima:
-            duracion = (fecha_fin - fecha_inicio).days
-            print(
-                f"[Error] El préstamo no puede superar 1 semana (7 días). "
-                f"Ingresó un período de {duracion} días.\n"
-            )
-            continue
-
-        duracion_dias = (fecha_fin - fecha_inicio).days
-        print(f"[Éxito] Préstamo configurado por {duracion_dias} día(s) (Hasta: {fecha_fin.strftime('%d/%m/%Y')}).")
-        return fecha_fin
 #Esto es pa probar .3.
 def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tarifa_por_dia) -> dict:
     if fecha_entrega_real <= fecha_fin_pactada:
@@ -310,7 +367,7 @@ def mostrar_solicitudes(cond):
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
         # Para Encargado
-        if cond == "all":
+        if cond:
 
             reader = csv.DictReader(archivo)
             print("| ID | Correo | Numero del equipo | Fecha inicial | Fecha final | Estado de la solicitud | Estado del usuario|")
