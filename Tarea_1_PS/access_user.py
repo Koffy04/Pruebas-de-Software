@@ -1,7 +1,6 @@
 import csv
 import re
 import os
-import access_solicitudes
 
 email_regex = r"(?:[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+(?:\.[a-z0-9!#$%&'*+\x2f=?^_`\x7b-\x7d~\x2d]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9\x2d]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9\x2d]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"
 password_regex = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
@@ -11,7 +10,6 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_usuarios.csv")
 
 fieldnames = ['nombre', 'correo', 'contraseña', 'tipo', 'estado']
 convertion = {'H': 'Habilitado', 'I': 'Inhabilitado'}
-
 
 correo = ""
 
@@ -132,22 +130,132 @@ def register():
     
     return
 
-def have_solicitudes():
-    access_solicitudes.have_solicitud_correo(correo)
+# Retorna el correo actual, después de un login
+def get_correo():
+    return correo
 
-def estado_usuario(correo):
+# Verifica si el usuario está habilitado para solicitar
+def mostrar_usuarios():
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
         reader = csv.DictReader(archivo)
+        print("| Nombre | Correo | estado |")
         for row in reader:
-            
+
+            # Información bruta
+            db_nombre = row.get(fieldnames[0])
             db_correo = row.get(fieldnames[1])
             db_tipo = row.get(fieldnames[3])
+            db_estado = row.get(fieldnames[4])
 
-            if db_correo == correo and db_tipo == "H":
-                print("\n< Usuario habilitado para solicitar equipos >\n")
-                return True
+            # printeo de la información
+            if db_tipo == "solicitante":
+                print(f"| {db_nombre} | {db_correo} | {convertion[db_estado]} |")
+
+# Ve el estado del solicitante basado en quién pregunta. En caso de ser encargado puede modificar el estado
+def ver_estado_usuario(encargado):
+
+    # Para Solicitante
+    if not encargado:
+
+        with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+            reader = csv.DictReader(archivo)
+            for row in reader:
+
+                db_correo = row.get(fieldnames[1])
+                if db_correo == get_correo() and db_estado == "H":
+
+                    db_estado = row.get(fieldnames[4])
+                    db_nombre = row.get(fieldnames[0])
+                    print(f"Solicitante {db_nombre} habilitado para solicitar equipos\n")
+                    return True
+                
+            print(f"Solicitante {db_nombre} Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
+            return False
+
+    elif encargado:
+
+        DONE = False
+        while not DONE:
+
+            mail = input("\n Excriba el correo del solicitante, que desee modificar su estado: ")
+
+            with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+                found = False
+                reader = csv.DictReader(archivo)
+                print("| Nombre | Correo | estado |")
+                for row in reader:
+
+                    #información bruta
+                    db_nombre = row.get(fieldnames[0])
+                    db_correo = row.get(fieldnames[1])
+                    db_estado = row.get(fieldnames[4])
+
+                    if db_correo == mail:
+
+                        found = True
+                        print(f"| {db_nombre} | {db_correo} | {convertion[db_estado]} |")
+                        break
+
+            if not found:
+                print("\n< Correo no encontrado, pruebe con otro >\n")
+                continue
+
+            n_sure = input("\n¿Está seguro que quiere modificar este equipo? Y/N")
+            if n_sure.upper() == "Y": DONE = True
+            elif n_sure.upper() == "N": continue
+            else: print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+
+        DONE = False
+        while not DONE:
+
+            estado = input("\nColoque el estado que le pondrá al solicitante (H: Habilitado, I: Inhabilitado)")
+            if estado.upper() != "H" and estado.upper() != "I": 
+                print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
             else:
-                print("Su usuario se encuentra Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
-                return False
+                DONE = True
+                cambiar_estado_usuario(mail,estado.upper())
+
+# Cambia el estado del solicitante del correo objetivo
+def cambiar_estado_usuario(mail,new_state):
+
+    # Copia la información
+    new_data = []
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+        reader = csv.DictReader(archivo)
+        for row in reader:
+
+            db_correo = row.get(fieldnames[1])
+            if db_correo == mail:
+
+                # Cambia el valor objetivo
+                row[fieldnames[1]] = new_state
+
+            new_data.append(row)
+
+    # Restaura la información
+    with open(DB_PATH, mode="w", newline='', encoding="utf-8") as archivo:
+        writer = csv.DictWriter(archivo, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(new_data)
+
+    print("\n< Estado cambiado de forma exitosa >\n")
+    return
+
+# Verifica si la contraseña es correcta
+def verificar_contrasena(passw):
+    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+    
+        reader = csv.DictReader(archivo)
+        for row in reader:
+
+            db_correo = row.get(fieldnames[1])
+            db_contrasena = row.get(fieldnames[2])
+
+            if db_correo == get_correo() and db_contrasena == passw:
+                print("Contraseña verificada correctamente")
+                return True
+
+        return False

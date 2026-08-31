@@ -8,12 +8,13 @@ DB_PATH = os.path.join(BASE_DIR, "db", "tabla_equipos.csv")
 fieldnames = ['id', 'nombre_equipo', 'descripcion', 'estado']
 convertion = {'ME': 'Mal estado', 'BE': 'Buen estado'}
 
-def mostrar_equipos(cond):
+# Muestra la información del equipo dependiendo de quién pregunte
+def mostrar_equipos(encargado):
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
         # Para Encargado
-        if cond == "all":
+        if encargado:
 
             reader = csv.DictReader(archivo)
             print("| ID | Nombre del equipo | Descripción del equipo | Estado del equipo |")
@@ -29,7 +30,7 @@ def mostrar_equipos(cond):
                 print(f"| {db_id} | {db_nombre} | {db_descripcion} | {convertion[db_estado]} |")
 
         # Para solicitante
-        else:
+        elif not encargado:
 
             reader = csv.DictReader(archivo)
             print("| ID | Nombre del equipo | Descripción del equipo ")
@@ -49,29 +50,13 @@ def mostrar_equipos(cond):
         
     return
 
-def mostrar_estados():
+# Ve el estado de los equipos. Se puede modificar el estado 
+def ver_estado_equipo():
 
-    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
-        reader = csv.DictReader(archivo)
-        print("| ID | Nombre del equipo | Estado del equipo |")
-        for row in reader:
+    DONE = False
+    while not DONE:
 
-            # Información bruta
-            db_id = row.get(fieldnames[0])
-            db_nombre = row.get(fieldnames[1])
-            db_estado = row.get(fieldnames[3])
-
-            # printeo de la información
-            print(f"| {db_id} | {db_nombre} | {convertion[db_estado]} |")
-
-    return
-
-def mostrar_estado_individual():
-
-    done = False
-    while not done:
-
-        id = input("\n Escriba el ID del equipo, que desee modificar el estado: ")
+        id = input("\n Escriba el ID del equipo, que desee modificar su estado: ")
 
         with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
             found = False
@@ -85,43 +70,44 @@ def mostrar_estado_individual():
                 db_estado = row.get(fieldnames[3])
 
                 if db_id == id:
-                    # printeo de la información
-                    print(f"\n| {db_id} | {db_nombre} | {convertion[db_estado]} |")
-                    found = True
 
-            if not found:
-                print("\n< ID no encontrado, puebe con otro >")
-                continue
+                    found = True
+                    print(f"\n| {db_id} | {db_nombre} | {convertion[db_estado]} |")     
+                    break
+
+        if not found:
+            print("\n< ID no encontrado, puebe con otro >")
+            continue
 
         n_sure = input("\n¿Está seguro que quiere modificar este equipo? Y/N")
-        if n_sure.upper() == "Y":
-            done = True
-        elif n_sure.upper() == "N":
-            continue
-        else:
-            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+        if n_sure.upper() == "Y": DONE = True
+        elif n_sure.upper() == "N": continue
+        else: print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
 
-    done = False
-    while not done:
+    DONE = False
+    while not DONE:
 
         estado = input("\nColoque el estado que le pondrá al equipo (ME: Mal estado, BE: Buen estado)")
-        if estado != "ME" and estado != "BE":
-            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+        if estado.upper() != "ME" and estado.upper() != "BE": 
+            print("\n< Valor ingresado inválido. Ingrese de nuevo >\n") 
         else:
-            cambiar_estado(id, estado)
+            DONE = True
+            cambiar_estado_equipo(id, estado.upper())
 
-def cambiar_estado(id,new_state):
+# Cambia el estado del equipo del ID objetivo
+def cambiar_estado_equipo(id,new_state):
 
-    # Copiar toda la información de la tabla
+    # Copia la información
     new_data = []
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
         
         reader = csv.DictReader(archivo)
         for row in reader:
 
-            # Cambiar el valor de la fila especificada
             db_id = row.get(fieldnames[0])
             if db_id == id:
+
+                # Cambia el valor objetivo
                 row[fieldnames[0]] = new_state
 
             new_data.append(row)
@@ -134,27 +120,13 @@ def cambiar_estado(id,new_state):
             writer.writerows(new_data)
 
     print("\n< Estado cambiado de forma exitosa >\n")
-    with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
-
-        reader = csv.DictReader(archivo)
-        print("| ID | Nombre del equipo | Estado del equipo |")
-        for row in reader:
-
-            # Información bruta
-            db_id = row.get(fieldnames[0])
-            db_nombre = row.get(fieldnames[1])
-            db_estado = row.get(fieldnames[3])
-
-            if db_id == id:
-                # printeo de la información
-                print(f"\n| {db_id} | {db_nombre} | {convertion[db_estado]} |")
-                found = True
-
     return
 
-def confirmar_tabla_equipos(id):
+
+def confirmar_equipo(id):
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
         reader = csv.DictReader(archivo)
         for row in reader:
 
@@ -163,6 +135,5 @@ def confirmar_tabla_equipos(id):
 
             if bd_id == id and bd_estado == 'BE':
                 return True
-            else:
-                print("\n< Por favor ingrese un ID válido> \n")
-                return False
+            
+        return False
