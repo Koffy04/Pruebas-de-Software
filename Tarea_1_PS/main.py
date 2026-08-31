@@ -2,8 +2,6 @@ import access_user
 import access_item
 import access_solicitudes
 
-TARIFA_MORA_DIARIA = 2000 
-
 def main():
 
     # INTERFAZ DE INICIO
@@ -14,12 +12,12 @@ def main():
     print("==============================================================")
 
     while True:
-        print("\n-------------------- OPCIONES DE INICIO --------------------")
+        print("-------------------- OPCIONES DE INICIO ----------------------")
         print("| 1. Iniciar sesión                                          |")
         print("| 2. Registrarse                                             |")
         print("| 3. Salir                                                   |")
         print("--------------------------------------------------------------")
-        eleccion = input("Su respuesta: ")
+        eleccion = input("\nSu respuesta: ")
 
         if eleccion == "1":
 
@@ -51,7 +49,7 @@ def main():
             print("\n")
             print("==================================================================")
             print("                      Interfaz de Solicitante                     ")
-            print("==================================================================\n")
+            print("==================================================================")
             print("-------------------- OPCIONES DE SOLICITANTE ---------------------")
             print("| 1. Ver y solicitar equipo                                      |")
             print("| 2. Ver estado de mi solicitud                                  |")
@@ -59,7 +57,7 @@ def main():
             print("| 4. Conoce tu deuda *Solo si tiene una solicitud con deuda      |")
             print("| 5. Salir                                                       |")
             print("------------------------------------------------------------------")
-            eleccion = input("Su respuesta: ")
+            eleccion = input("\nSu respuesta: ")
 
             if eleccion == "1":
                 if not access_solicitudes.have_solicitud_correo():
@@ -77,23 +75,27 @@ def main():
                 print("----------------------------")
                 print(" Ver estado de mi solicitud ")
                 print("----------------------------\n")
-                access_solicitudes.estado_solicitud()
+
+                access_solicitudes.mostrar_solicitudes(encargado)
 
             elif eleccion=="3":
 
                 print("--------------------")
                 print(" Cancelar solicitud ")
                 print("--------------------\n")
+
                 access_solicitudes.cancelar_solicitud()
 
             elif eleccion == "4":
+                #FALTA ESTO
                 print("-----------------")
                 print(" Conoce tu deuda ")
                 print("-----------------\n")
-                correo=input("")
-                access_solicitudes.cancelar_solicitud(correo)
+
+                access_solicitudes.cancelar_solicitud()
 
             elif eleccion == "5":
+
                 print("Saliendo...")
                 return
 
@@ -103,30 +105,33 @@ def main():
     # INTERFAZ DE ENCARGADO
     elif encargado:
         while True:
+
             print("\n")
-            print("==========================================")
-            print("           Intefaz de Encargado           ")
-            print("==========================================\n")
-            print("--------- OPCIONES DEL ENCARGADO ---------")
-            print("| 1. Ver solicitudes pendientes          |")
-            print("| 2. Ver todos los equipos               |")
-            print("| 3. Editar el estado de una máquina     |")
-            print("| 4. Ver solicitudes                     |")
-            print("| 5. Cambiar el estado de un usuario     |")
-            print("| 6. Salir                               |")
-            print("------------------------------------------\n")
-            eleccion = input("Su respuesta: ")
+            print("======================================================")
+            print("                 Intefaz de Encargado                 ")
+            print("======================================================")
+            print("--------------- OPCIONES DEL ENCARGADO ---------------")
+            print("| 1. Ver todas las solicitudes                       |")
+            print("| 2. Ver todos los equipos                           |")
+            print("| 3. Editar el estado de un equipo                   |")
+            print("| 4. Aprobar/Rechazar solicitudes pendientes         |")
+            print("| 5. Cambiar el estado de un usuario                 |")
+            print("| 6. Salir                                           |")
+            print("------------------------------------------------------")
+            eleccion = input("\nSu respuesta: ")
 
             if eleccion == "1":
 
-                print("\n----------------------------")
-                print(" Ver solicitudes pendientes ")
+                print("----------------------------")
+                print(" Ver todas las solicitudes  ")
                 print("----------------------------\n")
+
                 access_solicitudes.mostrar_solicitudes(encargado)
+                input("\nPresione Enter para continuar...")
 
             elif eleccion == "2":
 
-                print("\n-----------------------")
+                print("-----------------------")
                 print(" Ver todos los equipos ")
                 print("-----------------------\n")
 
@@ -136,24 +141,27 @@ def main():
 
             elif eleccion == "3":
             
-                print("------------------------------")
-                print(" Editar estado de una máquina ")
-                print("------------------------------\n")
+                print("-------------------------------")
+                print(" Editar el estado de un equipo ")
+                print("-------------------------------\n")
                 
                 access_item.mostrar_equipos(encargado)
                 access_item.ver_estado_equipo()
             
             elif eleccion == "4":
 
-                print("----------------------")
-                print(" Cambiar una solicitud ")
-                print("----------------------\n")
-                print(" Ingrese correo para identificar la solicitud a cambiar")
-                print("-----------------------------------------\n")
-                correo=input("")
-                access_solicitudes.resolver_solicitud(correo)
+                print("------------------------------------------")
+                print(" Aprobar/Rechazar solicitudes pendientes ")
+                print("------------------------------------------\n")
+
+                access_solicitudes.mostrar_pendientes()
+                access_solicitudes.resolver_solicitud()
 
             elif eleccion == "5":
+
+                print("---------------------------------")
+                print(" Cambiar el estado de un usuario ")
+                print("---------------------------------\n")
 
                 access_user.mostrar_usuarios()
                 access_user.ver_estado_usuario(encargado)
