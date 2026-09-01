@@ -31,16 +31,22 @@ def login_check(email, passw):
 
                 #Verificación si existe contraseña en BD
                 if db_contrasena == passw:
+
                     print("Usuario encontrado")
                     correo = email
+
                     if db_tipo == "encargado":
+
                         print(f"Bienvenido Encargado {db_nombre}")
                         return True,True
+                    
                     else:
+
                         print(f"Bienvenido Solicitante {db_nombre}")
                         return True,False
                         
                 else:
+
                     print("Contraseña incorrecta")
                     return False,False
 
@@ -52,9 +58,13 @@ def register_check(name, email, passw):
 
     # Verificación si existe correo en BD
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
         reader = csv.DictReader(archivo)
+
         for row in reader:
+
             if row.get('correo') == email:
+
                 print("El email de usuario ya se encuentra registrado.")
                 return False
 
@@ -72,7 +82,9 @@ def login():
     while not check_status:
 
         # Solicitamos los datos
-        correo = input("Ingresa tu correo: ")
+        correo = input("Ingresa tu correo (o '0' para volver): ")
+        if correo == "0":
+            return False
         contrasena = input("Ingresa tu contraseña: ")
 
         # Con los datos, erificamos la existencia del usuario
@@ -99,36 +111,45 @@ def register():
         else:
             print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
 
-    # Correo
-    check_email = False
-    pattern_email = re.compile(email_regex)
-    while not check_email:
-        correo = input("Ingresa tu correo: ")
-        if pattern_email.match(correo):
-            check_email = True
-        else:
-            print("\n< El correo no es válido >\n")
-
-    # Contraseña
     check_status = False
-    check_password = False
-    pattern_password = re.compile(password_regex)
     while not check_status:
+
+        # Correo
+        check_email = False
+        pattern_email = re.compile(email_regex)
+
+        while not check_email:  
+
+            correo = input("Ingresa tu correo: ")
+            if pattern_email.match(correo) :
+                check_email = True
+
+            else:
+                print("\n< El correo no es válido >\n")
+
+                
+        # Contraseña
+        check_password = False
+        pattern_password = re.compile(password_regex)
+
         while not check_password:
+
             contrasena = input("Ingresa tu contraseña (Mínimo de 8 caracteres. Mínimo un número y una letra): ")
+
             if pattern_password.match(contrasena):
-                check_password = True
+
+                c_contrasena = input("Vuelve a ingresar tu contraseña: ")
+                 
+                if contrasena == c_contrasena:
+                    check_password = True
+
+                else:
+                    print("\n< Contraseñas no coinciden, vuelve a intentarlo >\n")
+                            
             else:
                 print("La contraseña no cumple con el mínimo de seguridad")
 
-        c_contrasena = input("Vuelve a ingresar tu contraseña: ")
-        if contrasena == c_contrasena:
-            check_status = register_check(nombre, correo, contrasena)
-        else:
-            print("\n< Contraseñas no coinciden, vuelve a intentarlo >\n")
-            check_password = False
-    
-    return
+        check_status = register_check(nombre, correo, contrasena)
 
 # Retorna el correo actual, después de un login
 def get_correo():
@@ -139,8 +160,11 @@ def mostrar_usuarios():
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
+        print("-" * 81)
+        print(f"| {'Nombre':<25} | {'Correo':<30} | {'Estado':<15} |")
+        print("-" * 81)
+
         reader = csv.DictReader(archivo)
-        print("| Nombre | Correo | estado |")
         for row in reader:
 
             # Información bruta
@@ -151,7 +175,9 @@ def mostrar_usuarios():
 
             # printeo de la información
             if db_tipo == "solicitante":
-                print(f"| {db_nombre} | {db_correo} | {convertion[db_estado]} |")
+                print(f"| {db_nombre:<25} | {db_correo:<30} | {convertion[db_estado]:<15} |")
+
+        print("-" * 81)
 
 # Ve el estado del solicitante basado en quién pregunta. En caso de ser encargado puede modificar el estado
 def ver_estado_usuario(encargado):
@@ -164,15 +190,21 @@ def ver_estado_usuario(encargado):
             for row in reader:
 
                 db_correo = row.get(fieldnames[1])
-                if db_correo == get_correo() and db_estado == "H":
+                db_estado = row.get(fieldnames[4])
 
-                    db_estado = row.get(fieldnames[4])
+                if db_correo == get_correo():
+
                     db_nombre = row.get(fieldnames[0])
-                    print(f"Solicitante {db_nombre} habilitado para solicitar equipos\n")
-                    return True
-                
-            print(f"Solicitante {db_nombre} Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
-            return False
+
+                    if db_estado == "H":
+                        
+                        print(f"Solicitante {db_nombre} habilitado para solicitar equipos\n")
+                        return True
+                    
+                    else:
+
+                        print(f"Solicitante {db_nombre} Inhabilitado para pedir prestamo, porfavor resolver este problema con el encargado\n")
+                        return False
 
     elif encargado:
 
@@ -182,9 +214,13 @@ def ver_estado_usuario(encargado):
             mail = input("\n Excriba el correo del solicitante, que desee modificar su estado: ")
 
             with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+                print("-" * 81)
+                print(f"| {'Nombre':<25} | {'Correo':<30} | {'Estado':<15} |")
+                print("-" * 81)
+
                 found = False
                 reader = csv.DictReader(archivo)
-                print("| Nombre | Correo | estado |")
                 for row in reader:
 
                     #información bruta
@@ -195,8 +231,10 @@ def ver_estado_usuario(encargado):
                     if db_correo == mail:
 
                         found = True
-                        print(f"| {db_nombre} | {db_correo} | {convertion[db_estado]} |")
+                        print(f"| {db_nombre:<25} | {db_correo:<30} | {convertion[db_estado]:<15} |")
                         break
+
+                print("-" * 81)
 
             if not found:
                 print("\n< Correo no encontrado, pruebe con otro >\n")

@@ -1,1 +1,0 @@
-generar_solicitud

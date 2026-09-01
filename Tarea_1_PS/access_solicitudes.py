@@ -8,7 +8,7 @@ from datetime import date, datetime
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "db", "tabla_solicitudes.csv")
 
-TARIFA_MORA_DIARIA = 2000 
+TARIFA_MORA_DIARIA = 2000
 
 field_solicitud = ['id','correo','id_equipo','fecha_inicial','fecha_final','estado_solicitud']
 convert_solicitud = {'C':'cancelado','F':'finalizado','P':'pendiente','A':'aprobado', 'R':'rechazado', 'D':'deuda'}
@@ -28,11 +28,15 @@ def have_solicitud_correo():
             db_correo = row.get(field_solicitud[1])
             db_estado = row.get(field_solicitud[5])
 
-            if db_correo == correo and (db_estado == 'A' or db_estado == 'P' or db_estado=='D'): 
+            if db_correo == correo and (db_estado == 'A' or db_estado == 'P'):
+                print("Usted ya posee una solicitud en espera, Cumpla con la solicitud o cancelela")
                 return True
-        else:
-            print("Usted ya posee una solicitud en espera, Cumpla con la solicitud o cancelela")
-            return False
+            
+            elif db_correo == correo and db_estado == 'D':
+                print("Usted posee una deuda pendiente, consulte su deuda y páguela para que pueda solicitar otro equipo")
+                return True
+
+        return False
 
 # Verifica si el ID del equipo tiene una solicitud activa
 def have_solicitud_id_equipo(id):
@@ -42,8 +46,10 @@ def have_solicitud_id_equipo(id):
             reader = csv.DictReader(archivo)
             for row in reader:
                 
-                db_id_equipo = row.get(field_solicitud[2])
-                if db_id_equipo == id:
+                db_iditem= row.get(field_solicitud[2])
+                db_estado = row.get(field_solicitud[5])
+
+                if db_iditem == id and (db_estado == 'P' or db_estado == 'A' or db_estado == 'D'):
                     return True
                 
     return False
@@ -58,12 +64,11 @@ def solicitar_fecha_inicial():
         date = input("Ingrese la fecha de inicio del préstamo (DD/MM/AAAA): ")
         if fecha.compare_date_past(date):
             print("Fecha inicial registarda exitosamente\n")
-            break
+            return date
 
         else:
             print("Intentelo de nuevo\n")
 
-    return date
 
 # Solicita la fecha de término de la solicitud
 def solicitar_fecha_final(date):
@@ -76,7 +81,7 @@ def solicitar_fecha_final(date):
         f_date = input("Ingrese la fecha de devolución (DD/MM/AAAA): ")
         if fecha.compare_date_future(f_date):
             print("Fecha final registarda exitosamente\n")
-            break
+            return f_date
 
         else:
             print("Intentelo de nuevo\n")
@@ -91,7 +96,7 @@ def solicitar_equipo():
     while True:
 
         # Checkear ID de equipo válido
-        if access_item.confirmar_equipo(id) and have_solicitud_id_equipo(id):
+        if access_item.confirmar_equipo(id) and not have_solicitud_id_equipo(id):
             break
             
         print("\n< Por favor ingrese un ID válido> \n")
@@ -105,10 +110,15 @@ def solicitar_equipo():
         fecha_inicial = solicitar_fecha_inicial()
         fecha_final = solicitar_fecha_final(fecha_inicial)
 
-        n_sure = input(f"\n¿Está seguro que quiere escoger este rango de fechas (desde {fecha_inicial} hasta {fecha_final})? Y/N").upper()
-        if n_sure == "Y": DONE = True
-        elif n_sure == "N": continue
-        else: print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
+        while True:
+            n_sure = input(f"\n¿Está seguro que quiere escoger este rango (desde {fecha_inicial} hasta {fecha_final})? Y/N").upper()
+            if n_sure == "Y": 
+                DONE = True
+                break
+            elif n_sure == "N": 
+                break
+            else: 
+                print("\n< Valor ingresado inválido. Ingrese de nuevo >\n")
 
     print("Fechas del préstamo asignados correctamente, generando solicitud...\n")
 
@@ -143,9 +153,11 @@ def mostrar_solicitudes(encargado):
         # Para solicitante
         with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
-            count = 0
-            print("| N° de solicitud | ID del equipo | Fecha de inicio | Fecha de término | Estado |")
+            print("-" * 89)
+            print(f"| {'N° de solicitud':^15} | {'ID del equipo':^13} | {'Fecha de inicio':^15} | {'Fecha de término':^16} | {'Estado':<12} |")
+            print("-" * 89)
 
+            count = 0
             reader = csv.DictReader(archivo)
             for row in reader:
 
@@ -158,10 +170,12 @@ def mostrar_solicitudes(encargado):
 
                 if db_correo == access_user.get_correo():
                     count += 1
-                    print(f"| {count} | {db_iditem} | {db_fechai} | {db_fechaf} | {convert_solicitud[db_estado]}")
+                    print(f"| {count:^15} | {db_iditem:^13} | {db_fechai:^15} | {db_fechaf:^16} | {convert_solicitud[db_estado]:<12} |")
+
+            print("-" * 89)
 
             if count == 0:
-                print("No se encuentra ninguna solicitud asocioda a este correo.")
+                print("No se encuentra ninguna solicitud asociada a este correo.")
                 return
             
     elif encargado:
@@ -169,7 +183,9 @@ def mostrar_solicitudes(encargado):
         # Para encargado
         with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
-            print("| ID solicitud | Correo de usuario | ID del equipo | Fecha de inicio | Fecha de término | Estado |")
+            print("-" * 112)
+            print(f"| {'ID solicitud':^12} | {'Correo de usuario':<25} | {'ID del equipo':^13} | {'Fecha de inicio':^15} | {'Fecha de término':^16} | {'Estado':<12} |")
+            print("-" * 112)
 
             reader = csv.DictReader(archivo)
             for row in reader:
@@ -183,7 +199,9 @@ def mostrar_solicitudes(encargado):
                 db_estado = row.get(field_solicitud[5])
 
                 # printeo de la información
-                print(f"| {db_id} | {db_correo} | {db_iditem} | {db_fechai} | {db_fechaf} | {convert_solicitud[db_estado]} |")
+                print(f"| {db_id:^12} | {db_correo:<25} | {db_iditem:^13} | {db_fechai:^15} | {db_fechaf:^16} | {convert_solicitud[db_estado]:<12} |")
+
+            print("-" * 112)
 
     return
 
@@ -244,15 +262,16 @@ def cancelar_solicitud():
         writer.writerows(new_data)
 
 
-def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tarifa_por_dia) -> dict:
-    if fecha_entrega_real <= fecha_fin_pactada:
+def calcular_deuda_demora(fechaf_pactada: date, fechaf_real: date):
+    if fechaf_real <= fechaf_pactada:
         return {
             "dias_atraso": 0,
             "monto_deuda": 0,
             "estado": "A tiempo"
         }
-    dias_atraso = (fecha_entrega_real - fecha_fin_pactada).days
-    total_deuda = dias_atraso * tarifa_por_dia
+    
+    dias_atraso = (fechaf_real - fechaf_pactada).days
+    total_deuda = dias_atraso * TARIFA_MORA_DIARIA
 
     return {
         "dias_atraso": dias_atraso,
@@ -261,10 +280,10 @@ def calcular_deuda_demora(fecha_fin_pactada: date, fecha_entrega_real: date, tar
     }
 
 
-def calcular_deuda_demora_usuario(tarifa_diaria) -> dict:
+def calcular_deuda_demora_usuario():
 
     correo_usuario = access_user.get_correo()
-    hoy = fecha.get_actual()
+    hoy = fecha.get_actual().date()
     deuda_total = 0
     dias_totales_atraso = 0
     solicitudes_con_atraso = []
@@ -286,11 +305,11 @@ def calcular_deuda_demora_usuario(tarifa_diaria) -> dict:
             estado = fila["estado_solicitud"].strip().upper()
             if correo == correo_usuario and estado == "D":
                 try:
-                    fecha_limite = datetime.strptime(fila["fecha_final"].strip(), "%Y-%m-%d").date()
+                    fecha_limite = datetime.strptime(fila["fecha_final"].strip(), '%d/%m/%Y').date()
                 except ValueError:
                     continue  
 
-                calculo = calcular_deuda_demora(fecha_limite, hoy, tarifa_diaria)
+                calculo = calcular_deuda_demora(fecha_limite, hoy)
                 
                 if calculo["dias_atraso"] > 0:
                     dias_totales_atraso += calculo["dias_atraso"]
@@ -303,21 +322,27 @@ def calcular_deuda_demora_usuario(tarifa_diaria) -> dict:
                         "dias_atraso": calculo["dias_atraso"],
                         "monto": calculo["monto_deuda"]
                     })
+    
+    if deuda_total == 0:
+        print("\nNo tienes ninguna deuda pendiente ni días de atraso.\n")
+    else:
+        print(f"\nResumen de cuenta para: {correo_usuario}")
+        print(f"Deuda total acumulada: ${deuda_total}")
+        print(f"Días totales de atraso: {dias_totales_atraso}\n")
 
-    return {
-        "estado": "ok",
-        "correo": correo_usuario,
-        "deuda_total": deuda_total,
-        "dias_atraso": dias_totales_atraso,
-        "detalles": solicitudes_con_atraso
-    }
+        print("--- Detalles por equipo ---")
+        for detalle in solicitudes_con_atraso:
+            print(f"• ID Solicitud: {detalle['id_solicitud']} | ID Equipo: {detalle['id_equipo']} | Atraso: {detalle['dias_atraso']} días | Monto: ${detalle['monto']}")
+        print("---------------------------\n")
 
 # Muestra solamente las solicitudes pendientes
 def mostrar_pendientes():
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
 
-        print("| ID solicitud | Correo de usuario | ID del equipo | Fecha de inicio | Fecha de término | Estado |")
+        print("-" * 112)
+        print(f"| {'ID solicitud':^12} | {'Correo de usuario':<25} | {'ID del equipo':^13} | {'Fecha de inicio':^15} | {'Fecha de término':^16} | {'Estado':<12} |")
+        print("-" * 112)
 
         reader = csv.DictReader(archivo)
         for row in reader:
@@ -332,7 +357,9 @@ def mostrar_pendientes():
 
             # printeo de la información
             if db_estado == "P":
-                print(f"| {db_id} | {db_correo} | {db_iditem} | {db_fechai} | {db_fechaf} | {convert_solicitud[db_estado]} |")
+                print(f"| {db_id:^12} | {db_correo:<25} | {db_iditem:^13} | {db_fechai:^15} | {db_fechaf:^16} | {convert_solicitud[db_estado]:<12} |")
+
+        print("-" * 112)
 
     return
 
@@ -342,7 +369,7 @@ def resolver_solicitud():
     new_data = []
     found = False
 
-    id = input("Ingrese el ID de la solicitud que desea cambiar")
+    id = input("\nIngrese el ID de la solicitud que desea cambiar: ")
 
     with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
     
