@@ -87,12 +87,12 @@ def main():
                 access_solicitudes.cancelar_solicitud()
 
             elif eleccion == "4":
-                #FALTA ESTO
+
                 print("-----------------")
                 print(" Conoce tu deuda ")
                 print("-----------------\n")
 
-                access_solicitudes.cancelar_solicitud()
+                access_solicitudes.calcular_deuda_demora_usuario()
 
             elif eleccion == "5":
 

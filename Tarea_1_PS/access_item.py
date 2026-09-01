@@ -16,8 +16,11 @@ def mostrar_equipos(encargado):
         # Para Encargado
         if encargado:
 
+            print("-" * 95)
+            print(f"| {'ID':^4} | {'Nombre del equipo':<25} | {'Descripción del equipo':<35} | {'Estado del equipo':<17} |")
+            print("-" * 95)
+
             reader = csv.DictReader(archivo)
-            print("| ID | Nombre del equipo | Descripción del equipo | Estado del equipo |")
             for row in reader:
 
                 # Información bruta
@@ -27,13 +30,18 @@ def mostrar_equipos(encargado):
                 db_estado = row.get(fieldnames[3])
 
                 # printeo de la información
-                print(f"| {db_id} | {db_nombre} | {db_descripcion} | {convertion[db_estado]} |")
+                print(f"| {db_id:^4} | {db_nombre:<25} | {db_descripcion:<35} | {convertion[db_estado]:<17} |")
+
+            print(f"-" * 95)
 
         # Para solicitante
         elif not encargado:
 
+            print("-" * 74)
+            print(f"| {'ID':^4} | {'Nombre del equipo':<25} | {'Descripción del equipo':<35} |")
+            print("-" * 74)
+
             reader = csv.DictReader(archivo)
-            print("| ID | Nombre del equipo | Descripción del equipo ")
             for row in reader:
 
                 db_estado = row.get(fieldnames[3])
@@ -46,7 +54,9 @@ def mostrar_equipos(encargado):
                         db_descripcion = row.get(fieldnames[2])
 
                         # printeo de la información
-                        print(f"| {db_id} | {db_nombre} | {db_descripcion} |")
+                        print(f"| {db_id:^4} | {db_nombre:<25} | {db_descripcion:<35} |")
+
+            print("-" * 74)
         
     return
 
@@ -59,9 +69,13 @@ def ver_estado_equipo():
         id = input("\n Escriba el ID del equipo, que desee modificar su estado: ")
 
         with open(DB_PATH, mode="r", encoding="utf-8") as archivo:
+
+            print("-" * 74)
+            print(f"| {'ID':^4} | {'Nombre del equipo':<25} | {'Estado del equipo':<17} |")
+            print("-" * 74)
+
             found = False
             reader = csv.DictReader(archivo)
-            print("| ID | Nombre del equipo | Estado del equipo |")
             for row in reader:
 
                 # Información bruta
@@ -72,8 +86,10 @@ def ver_estado_equipo():
                 if db_id == id:
 
                     found = True
-                    print(f"\n| {db_id} | {db_nombre} | {convertion[db_estado]} |")     
+                    print(f"\n| {db_id:^4} | {db_nombre:^25} | {convertion[db_estado]:^17} |")     
                     break
+                
+            print("-" * 74)
 
         if not found:
             print("\n< ID no encontrado, puebe con otro >")
@@ -108,7 +124,7 @@ def cambiar_estado_equipo(id,new_state):
             if db_id == id:
 
                 # Cambia el valor objetivo
-                row[fieldnames[0]] = new_state
+                row[fieldnames[3]] = new_state
 
             new_data.append(row)
 
