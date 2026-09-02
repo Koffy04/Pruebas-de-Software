@@ -57,7 +57,7 @@ def have_solicitud_id_equipo(id):
 # Solicita la fecha de inicio de la solicitud
 def solicitar_fecha_inicial():
 
-    print(f"Hoy es {fecha.get_actual()}, La fecha mínima de solicitud es {fecha.plus_bussiness_3days()}")
+    print(f"Hoy es {fecha.print_today()}, La fecha mínima de solicitud es {fecha.plus_bussiness_3days()}")
 
     while True:
 
@@ -395,6 +395,8 @@ def resolver_solicitud():
                         print("\nSeleccione el nuevo estado para esta solicitud:")
                         print(" [A] Aprobado")
                         print(" [R] Rechazado")
+                        print(" [D] Deuda")
+                        print(" [F] Finalizado")
                         print(" [0] Cancelar operación sin cambios")
                         new_state = input("\nSu respuesta: ").upper()
                         
@@ -403,7 +405,7 @@ def resolver_solicitud():
                             print("\nOperación cancelada. Saliendo de la operación...")
                             return
                         
-                        elif new_state == 'A' or new_state == 'R':
+                        elif new_state == 'A' or new_state == 'R' or new_state == 'D' or new_state == 'F':
 
                             row[field_solicitud[5]] = new_state
                             print(f"Solicitud {convert_solicitud[new_state]} exitosamente")

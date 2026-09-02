@@ -1,12 +1,15 @@
 from datetime import datetime, date, timedelta
 
 # fecha_actual = date.today().strftime("%d/%m/%Y")
-fecha_actual = "25/08/2026"
+fecha_actual = "05/09/2026"
 lista = []
 
 # Get-er fecha_actual
 def get_actual():
     return datetime.strptime(fecha_actual,'%d/%m/%Y')
+
+def print_today():
+    return fecha_actual
 
 # 3 días hábiles en base a la fecha actual
 def plus_bussiness_3days():
