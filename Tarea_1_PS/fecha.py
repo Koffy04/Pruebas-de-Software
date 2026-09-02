@@ -68,7 +68,7 @@ def show_week(date):
     date_i = datetime.strptime(date, '%d/%m/%Y')
     date_f = datetime.strptime(plus_7days(date), '%d/%m/%Y')
 
-    print(f"Fechas disponibles (desde {date_i.strftime('%d/%m/%Y')}) hasta {date_f.strftime('%d/%m/%Y')} para devolver: ")
+    print(f"Fechas disponibles (desde {date_i.strftime('%d/%m/%Y')} hasta {date_f.strftime('%d/%m/%Y')} para devolver: ")
 
     while date_i <= date_f:
 
