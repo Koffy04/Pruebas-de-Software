@@ -82,9 +82,7 @@ def login():
     while not check_status:
 
         # Solicitamos los datos
-        correo = input("Ingresa tu correo (o '0' para volver): ")
-        if correo == "0":
-            return False
+        correo = input("Ingresa tu correo: ")
         contrasena = input("Ingresa tu contraseña: ")
 
         # Con los datos, erificamos la existencia del usuario
