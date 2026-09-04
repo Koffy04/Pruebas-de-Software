@@ -1,1 +1,23 @@
-nombre_equipo,tipo,estado_equipo
+id,nombre_equipo,descripcion,estado
+1,PC portátil,Linux/32GB RAM,BE
+2,PC portátil,Linux/32GB RAM,ME
+3,PC portátil,Linux/32GB RAM,BE
+4,PC portátil,Linux/32GB RAM,BE
+5,PC portátil,Linux/32GB RAM,BE
+6,PC portátil,Linux/32GB RAM,BE
+7,Pantalla,43x22 pulgadas/OLED,ME
+8,Pantalla,43x22 pulgadas/OLED,BE
+9,Pantalla,43x22 pulgadas/OLED,ME
+10,Pantalla,43x22 pulgadas/OLED,BE
+11,Pantalla,43x22 pulgadas/OLED,BE
+12,Pantalla,43x22 pulgadas/OLED,BE
+13,Notebook personal,Máquina Virtual/16GB RAM,ME
+14,Notebook personal,Máquina Virtual/16GB RAM,ME
+15,Notebook personal,Máquina Virtual/16GB RAM,ME
+16,Notebook personal,Máquina Virtual/16GB RAM,BE
+17,Notebook personal,Máquina Virtual/16GB RAM,ME
+18,Notebook personal,Máquina Virtual/16GB RAM,BE
+19,Notebook personal,Máquina Virtual/16GB RAM,ME
+20,Notebook empresarial,Windows/12GB RAM,BE
+21,Notebook empresarial,Windows/12GB RAM,ME
+22,Notebook empresarial,Windows/12GB RAM,BE
